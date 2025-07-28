@@ -141,6 +141,28 @@ export function AuthPage() {
         setSignupStep(1);
     };
 
+    // Enhanced keyboard event handlers
+    const handleLoginKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleLoginSubmit(authenticateUser)();
+        }
+    };
+
+    const handleSignupStep1KeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSignupNext();
+        }
+    };
+
+    const handleSignupStep2KeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleSignupSubmit(registerUser)();
+        }
+    };
+
     // Animation variants with proper typing
     const containerVariants: Variants = {
         hidden: {
@@ -468,6 +490,7 @@ export function AuthPage() {
                                     initial="hidden"
                                     animate="visible"
                                     exit="exit"
+                                    onKeyDown={handleLoginKeyDown}
                                 >
                                     {/* Email Field */}
                                     <motion.div variants={inputVariants}>
@@ -499,6 +522,7 @@ export function AuthPage() {
                                                     loginErrors.email ? "border-red-300 bg-red-50/50" : "border-gray-200 hover:border-[#4A9782]/50"
                                                 }`}
                                                 placeholder="Enter your email"
+                                                onKeyDown={handleLoginKeyDown}
                                             />
                                         </motion.div>
                                         <AnimatePresence>
@@ -547,6 +571,7 @@ export function AuthPage() {
                                                     loginErrors.password ? "border-red-300 bg-red-50/50" : "border-gray-200 hover:border-[#4A9782]/50"
                                                 }`}
                                                 placeholder="Enter your password"
+                                                onKeyDown={handleLoginKeyDown}
                                             />
                                             <motion.button
                                                 type="button"
@@ -652,9 +677,8 @@ export function AuthPage() {
                                     </motion.div>
                                 </motion.form>
                             ) : (
-                                <motion.form
+                                <motion.div
                                     key="signup-form"
-                                    onSubmit={handleSignupSubmit(registerUser)}
                                     className="space-y-4"
                                     variants={formVariants}
                                     initial="hidden"
@@ -670,6 +694,7 @@ export function AuthPage() {
                                                 animate="visible"
                                                 exit="exit"
                                                 className="space-y-4"
+                                                onKeyDown={handleSignupStep1KeyDown}
                                             >
                                                 {/* Name Field */}
                                                 <motion.div variants={inputVariants}>
@@ -701,6 +726,7 @@ export function AuthPage() {
                                                                 signupErrors.name ? "border-red-300 bg-red-50/50" : "border-gray-200 hover:border-[#4A9782]/50"
                                                             }`}
                                                             placeholder="Enter your full name"
+                                                            onKeyDown={handleSignupStep1KeyDown}
                                                         />
                                                     </motion.div>
                                                     <AnimatePresence>
@@ -749,6 +775,7 @@ export function AuthPage() {
                                                                 signupErrors.email ? "border-red-300 bg-red-50/50" : "border-gray-200 hover:border-[#4A9782]/50"
                                                             }`}
                                                             placeholder="Enter your email"
+                                                            onKeyDown={handleSignupStep1KeyDown}
                                                         />
                                                     </motion.div>
                                                     <AnimatePresence>
@@ -784,13 +811,15 @@ export function AuthPage() {
                                                 </motion.button>
                                             </motion.div>
                                         ) : (
-                                            <motion.div
+                                            <motion.form
                                                 key="step2"
+                                                onSubmit={handleSignupSubmit(registerUser)}
                                                 variants={stepVariants}
                                                 initial="hidden"
                                                 animate="visible"
                                                 exit="exit"
                                                 className="space-y-4"
+                                                onKeyDown={handleSignupStep2KeyDown}
                                             >
                                                 {/* Password Field */}
                                                 <motion.div variants={inputVariants}>
@@ -822,6 +851,7 @@ export function AuthPage() {
                                                                 signupErrors.password ? "border-red-300 bg-red-50/50" : "border-gray-200 hover:border-[#4A9782]/50"
                                                             }`}
                                                             placeholder="Create a password"
+                                                            onKeyDown={handleSignupStep2KeyDown}
                                                         />
                                                         <motion.button
                                                             type="button"
@@ -877,6 +907,7 @@ export function AuthPage() {
                                                                 signupErrors.confirmPassword ? "border-red-300 bg-red-50/50" : "border-gray-200 hover:border-[#4A9782]/50"
                                                             }`}
                                                             placeholder="Confirm your password"
+                                                            onKeyDown={handleSignupStep2KeyDown}
                                                         />
                                                         <motion.button
                                                             type="button"
@@ -975,10 +1006,10 @@ export function AuthPage() {
                                                         </AnimatePresence>
                                                     </motion.button>
                                                 </div>
-                                            </motion.div>
+                                            </motion.form>
                                         )}
                                     </AnimatePresence>
-                                </motion.form>
+                                </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
