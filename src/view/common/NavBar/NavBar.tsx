@@ -1,35 +1,128 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+    Home,
+    BookOpen,
+    ShoppingCart,
+    Search,
+    Settings,
+    LogOut,
+    User,
+    Moon,
+    Sun,
+    Menu,
+    X,
+    BookmarkPlus,
+    Library
+} from "lucide-react";
 import { backendApi } from "../../../api";
-import { ThemeToggle } from "../../../components/ThemeToggle";
+import type { NavItemProps } from "../../../model/ComponentProps";
+
+// Theme hook for dark/light mode
+const useTheme = () => {
+    const [isDark, setIsDark] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('theme') === 'dark' ||
+                (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+        return false;
+    });
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (isDark) {
+            root.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            root.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+    }, [isDark]);
+
+    return { isDark, toggleTheme: () => setIsDark(!isDark) };
+};
+
+// User info interface
+interface UserInfo {
+    username: string | null;
+    role: string | null;
+    userId: string | null;
+}
 
 export function NavBar() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { isDark, toggleTheme } = useTheme();
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    const username = localStorage.getItem('username');
-    const role = localStorage.getItem('role');
+    // User information
+    const [userInfo, setUserInfo] = useState<UserInfo>({
+        username: localStorage.getItem('username'),
+        role: localStorage.getItem('role'),
+        userId: localStorage.getItem('userId')
+    });
+
+    // Update user info when localStorage changes
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setUserInfo({
+                username: localStorage.getItem('username'),
+                role: localStorage.getItem('role'),
+                userId: localStorage.getItem('userId')
+            });
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setIsProfileDropdownOpen(false);
+            setIsMenuOpen(false);
+        };
+
+        if (isProfileDropdownOpen || isMenuOpen) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [isProfileDropdownOpen, isMenuOpen]);
 
     const handleLogout = async () => {
         try {
+            setIsLoggingOut(true);
             const refreshToken = localStorage.getItem('refreshToken');
+
             if (refreshToken) {
                 await backendApi.post('/auth/logout', { refreshToken });
             }
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('username');
-            localStorage.removeItem('role');
-            localStorage.removeItem('userId');
-            alert("Logged out successfully!");
+
+            // Clear all auth data
+            ['token', 'refreshToken', 'username', 'role', 'userId'].forEach(key => {
+                localStorage.removeItem(key);
+            });
+
+            setUserInfo({ username: null, role: null, userId: null });
+            setIsProfileDropdownOpen(false);
+
             navigate('/login');
         } catch (error) {
-            console.error(error);
-            alert("Error logging out");
+            console.error('Logout error:', error);
+            // Even if logout fails on server, clear local storage
+            ['token', 'refreshToken', 'username', 'role', 'userId'].forEach(key => {
+                localStorage.removeItem(key);
+            });
+            setUserInfo({ username: null, role: null, userId: null });
+            navigate('/login');
+        } finally {
+            setIsLoggingOut(false);
         }
     };
 
@@ -42,18 +135,52 @@ export function NavBar() {
         }
     };
 
-    const navItems = [
-        { label: "Home", href: "/", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-        { label: "Books", href: "/books", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
-        { label: "Borrow", href: "/borrow", icon: "M8 7V3a1 1 0 012-2h4a1 1 0 012 2v4h.586l1.707 1.707A1 1 0 0118 9v6a2 2 0 01-2 2v1a1 1 0 11-2 0v-1H8v1a1 1 0 11-2 0v-1a2 2 0 01-2-2V9a1 1 0 01.293-.707L6 6.586H6.414l.293.293A1 1 0 017 7z" },
+    // Navigation items
+    const navItems: NavItemProps[] = [
+        {
+            label: "Home",
+            href: "/",
+            icon: Home,
+            isActive: location.pathname === "/"
+        },
+        {
+            label: "Books",
+            href: "/books",
+            icon: Library,
+            isActive: location.pathname === "/books"
+        },
+        {
+            label: "Borrow",
+            href: "/borrow",
+            icon: ShoppingCart,
+            isActive: location.pathname === "/borrow"
+        },
     ];
+
+    // Admin navigation items
+    const adminNavItems: NavItemProps[] = userInfo.role === 'admin' ? [
+        {
+            label: "Add Book",
+            href: "/admin/books/add",
+            icon: BookmarkPlus,
+            isActive: location.pathname === "/admin/books/add"
+        },
+        {
+            label: "Admin Panel",
+            href: "/admin",
+            icon: Settings,
+            isActive: location.pathname.startsWith("/admin") && location.pathname !== "/admin/books/add"
+        }
+    ] : [];
+
+    const allNavItems = [...navItems, ...adminNavItems];
 
     return (
         <motion.nav
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="bg-white dark:bg-[#004030] shadow-lg border-b border-[#4A9782]/20 sticky top-0 z-50 backdrop-blur-sm bg-white/95 dark:bg-[#004030]/95"
+            className="bg-white/95 dark:bg-[#004030]/95 backdrop-blur-md shadow-lg border-b border-[#4A9782]/20 sticky top-0 z-50"
         >
             <div className="container mx-auto px-4 lg:px-6">
                 <div className="flex items-center justify-between h-16">
@@ -69,59 +196,49 @@ export function NavBar() {
                             transition={{ duration: 0.6 }}
                             className="w-10 h-10 bg-gradient-to-br from-[#4A9782] to-[#004030] rounded-xl mr-3 flex items-center justify-center shadow-md"
                         >
-                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-                            </svg>
+                            <BookOpen className="w-6 h-6 text-white" />
                         </motion.div>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-[#004030] to-[#4A9782] dark:from-[#4A9782] dark:to-white bg-clip-text text-transparent">
-                            LibraryHub
-                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-xl font-bold bg-gradient-to-r from-[#004030] to-[#4A9782] dark:from-[#4A9782] dark:to-white bg-clip-text text-transparent">
+                                LibraryHub
+                            </span>
+                            <span className="text-xs text-[#4A9782]/70 font-medium">
+                                Digital Library
+                            </span>
+                        </div>
                     </motion.div>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden lg:flex items-center space-x-8">
-                        {navItems.map((item, index) => (
-                            <motion.a
-                                key={item.label}
-                                href={item.href}
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 + 0.3 }}
-                                whileHover={{ y: -2 }}
-                                className="relative font-medium text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-all duration-200 group py-2"
-                            >
-                                <span>{item.label}</span>
-                                <motion.div
-                                    className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-[#4A9782] to-[#004030] rounded-full"
-                                    initial={{ width: 0 }}
-                                    whileHover={{ width: "100%" }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </motion.a>
-                        ))}
-
-                        {role === 'admin' && (
-                            <motion.a
-                                href="/admin"
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.6 }}
-                                whileHover={{ y: -2 }}
-                                className="relative font-medium text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-all duration-200 group flex items-center space-x-1 py-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                                <span>Admin</span>
-                                <motion.div
-                                    className="absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-[#4A9782] to-[#004030] rounded-full"
-                                    initial={{ width: 0 }}
-                                    whileHover={{ width: "100%" }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </motion.a>
-                        )}
+                    <div className="hidden lg:flex items-center space-x-2">
+                        {allNavItems.map((item, index) => {
+                            const IconComponent = item.icon!;
+                            return (
+                                <motion.button
+                                    key={item.label}
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 + 0.3 }}
+                                    whileHover={{ y: -2, scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => navigate(item.href)}
+                                    className={`relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
+                                        item.isActive
+                                            ? 'bg-[#4A9782]/10 text-[#004030] dark:text-[#4A9782] shadow-md'
+                                            : 'text-[#004030]/70 dark:text-white/70 hover:text-[#004030] dark:hover:text-white hover:bg-[#4A9782]/5'
+                                    }`}
+                                >
+                                    <IconComponent size={18} />
+                                    <span>{item.label}</span>
+                                    {item.isActive && (
+                                        <motion.div
+                                            layoutId="activeIndicator"
+                                            className="absolute inset-0 bg-gradient-to-r from-[#4A9782]/10 to-[#004030]/10 rounded-lg border border-[#4A9782]/20"
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        />
+                                    )}
+                                </motion.button>
+                            );
+                        })}
                     </div>
 
                     {/* Search Bar */}
@@ -135,58 +252,71 @@ export function NavBar() {
                             <form onSubmit={handleSearch} className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Search books, authors, categories..."
+                                    placeholder="Search books, authors, genres..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border-2 border-[#4A9782]/20 rounded-full bg-white dark:bg-[#004030] text-[#004030] dark:text-white placeholder-[#4A9782]/60 focus:border-[#4A9782] focus:outline-none transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="w-full pl-12 pr-4 py-3 border-2 border-[#4A9782]/20 rounded-full bg-white dark:bg-[#004030]/50 text-[#004030] dark:text-white placeholder-[#4A9782]/60 focus:border-[#4A9782] focus:outline-none transition-all duration-200 shadow-sm hover:shadow-md"
                                 />
                                 <motion.button
                                     type="submit"
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
-                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#4A9782] hover:text-[#004030] dark:hover:text-white transition-colors duration-200"
+                                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#4A9782] hover:text-[#004030] dark:hover:text-white transition-colors duration-200"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                                    <Search size={18} />
                                 </motion.button>
                             </form>
                         </motion.div>
                     </div>
 
                     {/* Right Side Actions */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
                         {/* Mobile Search Button */}
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setIsSearchOpen(!isSearchOpen)}
-                            className="md:hidden p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200"
+                            className="md:hidden p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200 rounded-lg hover:bg-[#4A9782]/10"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <Search size={20} />
                         </motion.button>
 
-                        <ThemeToggle />
+                        {/* Theme Toggle */}
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={toggleTheme}
+                            className="p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200 rounded-lg hover:bg-[#4A9782]/10"
+                        >
+                            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                        </motion.button>
 
-                        {username ? (
+                        {/* User Profile / Auth */}
+                        {userInfo.username ? (
                             <div className="relative">
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsProfileDropdownOpen(!isProfileDropdownOpen);
+                                    }}
                                     className="flex items-center space-x-2 bg-gradient-to-r from-[#4A9782] to-[#004030] text-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200"
                                 >
-                                    <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                        </svg>
+                                    <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center">
+                                        <User size={16} />
                                     </div>
-                                    <span className="text-sm font-medium hidden sm:inline">{username}</span>
-                                    <svg className={`w-4 h-4 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <span className="text-sm font-medium hidden sm:inline max-w-20 truncate">
+                                        {userInfo.username}
+                                    </span>
+                                    <motion.div
+                                        animate={{ rotate: isProfileDropdownOpen ? 180 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M6 9l6 6 6-6"/>
+                                        </svg>
+                                    </motion.div>
                                 </motion.button>
 
                                 <AnimatePresence>
@@ -196,22 +326,71 @@ export function NavBar() {
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                             transition={{ duration: 0.2 }}
-                                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#004030] rounded-xl shadow-xl border border-[#4A9782]/20 py-2 z-50"
+                                            className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#004030] rounded-xl shadow-xl border border-[#4A9782]/20 py-2 z-50"
+                                            onClick={(e) => e.stopPropagation()}
                                         >
-                                            <div className="px-4 py-2 border-b border-[#4A9782]/20">
-                                                <p className="text-sm font-medium text-[#004030] dark:text-white">Signed in as</p>
-                                                <p className="text-sm text-[#4A9782] truncate">{username}</p>
+                                            {/* User Info */}
+                                            <div className="px-4 py-3 border-b border-[#4A9782]/20">
+                                                <p className="text-sm font-medium text-[#004030] dark:text-white">
+                                                    Signed in as
+                                                </p>
+                                                <p className="text-sm text-[#4A9782] truncate font-semibold">
+                                                    {userInfo.username}
+                                                </p>
+                                                {userInfo.role && (
+                                                    <span className="inline-block mt-1 px-2 py-1 text-xs bg-[#4A9782]/10 text-[#4A9782] rounded-full font-medium capitalize">
+                                                        {userInfo.role}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <motion.button
-                                                whileHover={{ backgroundColor: "rgba(74, 151, 130, 0.1)" }}
-                                                onClick={handleLogout}
-                                                className="w-full text-left px-4 py-2 text-sm text-[#004030] dark:text-white hover:text-[#4A9782] transition-colors duration-200 flex items-center space-x-2"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                </svg>
-                                                <span>Sign out</span>
-                                            </motion.button>
+
+                                            {/* Profile Actions */}
+                                            <div className="py-1">
+                                                <motion.button
+                                                    whileHover={{ backgroundColor: "rgba(74, 151, 130, 0.1)" }}
+                                                    onClick={() => {
+                                                        navigate('/profile');
+                                                        setIsProfileDropdownOpen(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2 text-sm text-[#004030] dark:text-white hover:text-[#4A9782] transition-colors duration-200 flex items-center space-x-2"
+                                                >
+                                                    <User size={16} />
+                                                    <span>View Profile</span>
+                                                </motion.button>
+
+                                                <motion.button
+                                                    whileHover={{ backgroundColor: "rgba(74, 151, 130, 0.1)" }}
+                                                    onClick={() => {
+                                                        navigate('/settings');
+                                                        setIsProfileDropdownOpen(false);
+                                                    }}
+                                                    className="w-full text-left px-4 py-2 text-sm text-[#004030] dark:text-white hover:text-[#4A9782] transition-colors duration-200 flex items-center space-x-2"
+                                                >
+                                                    <Settings size={16} />
+                                                    <span>Settings</span>
+                                                </motion.button>
+                                            </div>
+
+                                            {/* Logout */}
+                                            <div className="border-t border-[#4A9782]/20 py-1">
+                                                <motion.button
+                                                    whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+                                                    onClick={handleLogout}
+                                                    disabled={isLoggingOut}
+                                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:text-red-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+                                                >
+                                                    {isLoggingOut ? (
+                                                        <motion.div
+                                                            animate={{ rotate: 360 }}
+                                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                            className="w-4 h-4 border-2 border-red-600/20 border-t-red-600 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        <LogOut size={16} />
+                                                    )}
+                                                    <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
+                                                </motion.button>
+                                            </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -223,9 +402,7 @@ export function NavBar() {
                                 onClick={() => navigate('/login')}
                                 className="bg-gradient-to-r from-[#4A9782] to-[#004030] text-white px-6 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                </svg>
+                                <User size={16} />
                                 <span>Sign In</span>
                             </motion.button>
                         )}
@@ -235,11 +412,9 @@ export function NavBar() {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="lg:hidden p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200"
+                            className="lg:hidden p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200 rounded-lg hover:bg-[#4A9782]/10"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                            </svg>
+                            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                         </motion.button>
                     </div>
                 </div>
@@ -252,7 +427,7 @@ export function NavBar() {
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="md:hidden border-t border-[#4A9782]/20 py-4"
+                            className="md:hidden border-t border-[#4A9782]/20 py-4 overflow-hidden"
                         >
                             <form onSubmit={handleSearch} className="relative">
                                 <input
@@ -260,15 +435,13 @@ export function NavBar() {
                                     placeholder="Search books, authors..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 border-2 border-[#4A9782]/20 rounded-full bg-white dark:bg-[#004030] text-[#004030] dark:text-white placeholder-[#4A9782]/60 focus:border-[#4A9782] focus:outline-none transition-all duration-200"
+                                    className="w-full pl-12 pr-4 py-3 border-2 border-[#4A9782]/20 rounded-full bg-white dark:bg-[#004030]/50 text-[#004030] dark:text-white placeholder-[#4A9782]/60 focus:border-[#4A9782] focus:outline-none transition-all duration-200"
                                 />
                                 <button
                                     type="submit"
-                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#4A9782]"
+                                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#4A9782]"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                                    <Search size={18} />
                                 </button>
                             </form>
                         </motion.div>
@@ -283,42 +456,33 @@ export function NavBar() {
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="lg:hidden border-t border-[#4A9782]/20 bg-white/95 dark:bg-[#004030]/95 backdrop-blur-sm"
+                            className="lg:hidden border-t border-[#4A9782]/20 bg-white/95 dark:bg-[#004030]/95 backdrop-blur-sm overflow-hidden"
                         >
-                            <div className="py-4 space-y-2">
-                                {navItems.map((item, index) => (
-                                    <motion.a
-                                        key={item.label}
-                                        href={item.href}
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        whileHover={{ x: 10, backgroundColor: "rgba(74, 151, 130, 0.1)" }}
-                                        className="flex items-center space-x-3 px-4 py-3 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-all duration-200 rounded-lg mx-2"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                                        </svg>
-                                        <span className="font-medium">{item.label}</span>
-                                    </motion.a>
-                                ))}
-
-                                {role === 'admin' && (
-                                    <motion.a
-                                        href="/admin"
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.3 }}
-                                        whileHover={{ x: 10, backgroundColor: "rgba(74, 151, 130, 0.1)" }}
-                                        className="flex items-center space-x-3 px-4 py-3 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-all duration-200 rounded-lg mx-2"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        </svg>
-                                        <span className="font-medium">Admin Dashboard</span>
-                                    </motion.a>
-                                )}
+                            <div className="py-4 space-y-1">
+                                {allNavItems.map((item, index) => {
+                                    const IconComponent = item.icon!;
+                                    return (
+                                        <motion.button
+                                            key={item.label}
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: index * 0.1 }}
+                                            whileHover={{ x: 10, backgroundColor: "rgba(74, 151, 130, 0.1)" }}
+                                            onClick={() => {
+                                                navigate(item.href);
+                                                setIsMenuOpen(false);
+                                            }}
+                                            className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-all duration-200 rounded-lg mx-2 ${
+                                                item.isActive
+                                                    ? 'bg-[#4A9782]/10 text-[#004030] dark:text-[#4A9782]'
+                                                    : 'text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782]'
+                                            }`}
+                                        >
+                                            <IconComponent size={20} />
+                                            <span className="font-medium">{item.label}</span>
+                                        </motion.button>
+                                    );
+                                })}
                             </div>
                         </motion.div>
                     )}

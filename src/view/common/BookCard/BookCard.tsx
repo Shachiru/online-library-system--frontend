@@ -2,15 +2,15 @@ import {useState} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {increaseQuantity, decreaseQuantity} from "../../../slices/cartSlice";
 import type {AppDispatch, RootState} from "../../../store/store";
-import type {BookData} from "../../../model/BookData";
+import type {BookCardProps} from "../../../model/ComponentProps";
 
-type BookCardProps = {
-    data: BookData;
-    onAddToCart?: () => void; // Optional override for adding to cart
-    onRemoveFromCart?: (isbn: string) => void; // Optional override for removing from cart
-};
-
-export function BookCard({data, onAddToCart, onRemoveFromCart}: BookCardProps) {
+export function BookCard({
+                             data,
+                             onAddToCart,
+                             onRemoveFromCart,
+                             showActions = true,
+                             compact = false
+                         }: BookCardProps) {
     const dispatch = useDispatch<AppDispatch>();
     const [isHovered, setIsHovered] = useState(false);
 
@@ -42,20 +42,27 @@ export function BookCard({data, onAddToCart, onRemoveFromCart}: BookCardProps) {
         }
     };
 
+    const cardClasses = compact
+        ? "bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-[#ECFAE5] hover:border-[#CAE8BD] group"
+        : "bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-[#ECFAE5] hover:border-[#CAE8BD] group transform hover:-translate-y-2";
+
+    const imageHeight = compact ? "h-32" : "h-48";
+    const padding = compact ? "p-4" : "p-6";
+
     return (
         <div
-            className="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-[#ECFAE5] hover:border-[#CAE8BD] group transform hover:-translate-y-2"
+            className={cardClasses}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
             <div
                 className="h-1 bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-            <div className="p-6">
+            <div className={padding}>
                 <div
                     className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#ECFAE5] to-[#DDF6D2] p-4">
                     <div className="relative">
                         <img
-                            className="w-full h-48 object-cover rounded-xl shadow-md transform group-hover:scale-105 transition-transform duration-500"
+                            className={`w-full ${imageHeight} object-cover rounded-xl shadow-md transform group-hover:scale-105 transition-transform duration-500`}
                             src={data.coverImage || "https://via.placeholder.com/200x280?text=No+Cover"}
                             alt={data.title}
                             onError={(e) => {
@@ -67,14 +74,14 @@ export function BookCard({data, onAddToCart, onRemoveFromCart}: BookCardProps) {
                             className={`absolute inset-0 bg-gradient-to-t from-[#B0DB9C]/20 to-transparent rounded-xl opacity-0 transition-opacity duration-300 ${isHovered ? 'opacity-100' : ''}`}></div>
                     </div>
                     <div className="absolute top-2 right-2">
-            <span
-                className="bg-white/90 backdrop-blur-sm text-[#B0DB9C] px-3 py-1 rounded-full text-xs font-semibold border border-[#CAE8BD]/30">
-              {data.genre}
-            </span>
+                        <span
+                            className="bg-white/90 backdrop-blur-sm text-[#B0DB9C] px-3 py-1 rounded-full text-xs font-semibold border border-[#CAE8BD]/30">
+                            {data.genre}
+                        </span>
                     </div>
                 </div>
                 <div className="mb-6 space-y-3">
-                    <h3 className="text-xl font-bold text-gray-800 line-clamp-2 leading-tight">
+                    <h3 className={`${compact ? 'text-lg' : 'text-xl'} font-bold text-gray-800 line-clamp-2 leading-tight`}>
                         {data.title}
                     </h3>
                     <div className="flex items-center space-x-2">
@@ -112,57 +119,60 @@ export function BookCard({data, onAddToCart, onRemoveFromCart}: BookCardProps) {
                             ))}
                         </div>
                         <span className="text-sm font-semibold text-gray-700">
-              {data.averageRating.toFixed(1)}
-            </span>
+                            {data.averageRating.toFixed(1)}
+                        </span>
                         <span className="text-xs text-gray-500">
-              ({Math.floor(Math.random() * 100) + 10} reviews)
-            </span>
+                            ({Math.floor(Math.random() * 100) + 10} reviews)
+                        </span>
                     </div>
                 </div>
-                <div className="flex justify-center">
-                    {item ? (
-                        <div
-                            className="w-full bg-gradient-to-r from-[#ECFAE5] to-[#DDF6D2] p-4 rounded-2xl border-2 border-[#CAE8BD]/30 animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center justify-between">
-                                <button
-                                    onClick={handleDecrease}
-                                    disabled={item.itemCount <= 1}
-                                    className="w-10 h-10 bg-gradient-to-r from-[#CAE8BD] to-[#DDF6D2] text-gray-700 rounded-full hover:from-[#B0DB9C] hover:to-[#CAE8BD] hover:text-white transition-all duration-200 flex items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                              d="M20 12H4"/>
-                                    </svg>
-                                </button>
-                                <div className="bg-white px-4 py-2 rounded-xl border-2 border-[#CAE8BD] shadow-sm">
-                                    <span className="font-bold text-[#B0DB9C] text-lg">{item.itemCount}</span>
+                {showActions && (
+                    <div className="flex justify-center">
+                        {item ? (
+                            <div
+                                className="w-full bg-gradient-to-r from-[#ECFAE5] to-[#DDF6D2] p-4 rounded-2xl border-2 border-[#CAE8BD]/30 animate-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex items-center justify-between">
+                                    <button
+                                        onClick={handleDecrease}
+                                        disabled={item.itemCount <= 1}
+                                        className="w-10 h-10 bg-gradient-to-r from-[#CAE8BD] to-[#DDF6D2] text-gray-700 rounded-full hover:from-[#B0DB9C] hover:to-[#CAE8BD] hover:text-white transition-all duration-200 flex items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                  d="M20 12H4"/>
+                                        </svg>
+                                    </button>
+                                    <div className="bg-white px-4 py-2 rounded-xl border-2 border-[#CAE8BD] shadow-sm">
+                                        <span className="font-bold text-[#B0DB9C] text-lg">{item.itemCount}</span>
+                                    </div>
+                                    <button
+                                        onClick={handleIncrease}
+                                        className="w-10 h-10 bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] text-white rounded-full hover:from-[#CAE8BD] hover:to-[#B0DB9C] transition-all duration-200 flex items-center justify-center font-bold shadow-md hover:shadow-lg"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={handleIncrease}
-                                    className="w-10 h-10 bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] text-white rounded-full hover:from-[#CAE8BD] hover:to-[#B0DB9C] transition-all duration-200 flex items-center justify-center font-bold shadow-md hover:shadow-lg"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                </button>
                             </div>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={addToCart}
-                            className="w-full bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] text-white font-semibold py-4 px-6 rounded-2xl hover:from-[#CAE8BD] hover:to-[#B0DB9C] focus:outline-none focus:ring-2 focus:ring-[#B0DB9C] focus:ring-offset-2 transform hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 group/btn"
-                        >
-                            <svg
-                                className="w-5 h-5 transform group-hover/btn:scale-110 transition-transform duration-200"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5H17M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"/>
-                            </svg>
-                            <span className="transform group-hover/btn:translate-x-1 transition-transform duration-200">Add to Borrowing List</span>
-                        </button>
-                    )}
-                </div>
+                        ) : (
+                            <button
+                                onClick={addToCart}
+                                className="w-full bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] text-white font-semibold py-4 px-6 rounded-2xl hover:from-[#CAE8BD] hover:to-[#B0DB9C] focus:outline-none focus:ring-2 focus:ring-[#B0DB9C] focus:ring-offset-2 transform hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 group/btn"
+                            >
+                                <svg
+                                    className="w-5 h-5 transform group-hover/btn:scale-110 transition-transform duration-200"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5H17M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"/>
+                                </svg>
+                                <span
+                                    className="transform group-hover/btn:translate-x-1 transition-transform duration-200">Add to Borrowing List</span>
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
             <div className="h-1 bg-gradient-to-r from-transparent via-[#ECFAE5] to-transparent"></div>
         </div>
