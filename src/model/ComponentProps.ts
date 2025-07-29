@@ -1,6 +1,5 @@
 import type {BookData} from './BookData';
 
-// Common form field props
 export interface FormFieldProps {
     label: string;
     name: string;
@@ -10,7 +9,6 @@ export interface FormFieldProps {
     disabled?: boolean;
 }
 
-// Input field specific props
 export interface InputFieldProps extends FormFieldProps {
     type?: 'text' | 'email' | 'password' | 'number' | 'url' | 'tel';
     minLength?: number;
@@ -20,7 +18,6 @@ export interface InputFieldProps extends FormFieldProps {
     max?: number;
 }
 
-// Select field specific props
 export interface SelectFieldProps extends FormFieldProps {
     options: Array<{
         value: string;
@@ -30,7 +27,6 @@ export interface SelectFieldProps extends FormFieldProps {
     multiple?: boolean;
 }
 
-// BookCard component props
 export interface BookCardProps {
     data: BookData;
     onAddToCart?: () => void;
@@ -39,7 +35,6 @@ export interface BookCardProps {
     compact?: boolean;
 }
 
-// Admin form props
 export interface AdminBookSaveProps {
     initialData?: Partial<BookData>;
     onSave?: (book: BookData) => void;
@@ -47,14 +42,12 @@ export interface AdminBookSaveProps {
     isEditing?: boolean;
 }
 
-// Form submission handlers - Fixed the type for onFieldChange
 export interface BookFormHandlers {
     onSubmit: (data: BookFormData) => Promise<void>;
     onReset: () => void;
     onFieldChange?: (field: string, value: unknown) => void; // Changed from 'any' to 'unknown'
 }
 
-// Book form data (for form inputs)
 export interface BookFormData {
     title: string;
     author: string;
@@ -65,7 +58,38 @@ export interface BookFormData {
     coverImage?: string;
 }
 
-// Modal/Dialog props
+export interface UserProfile {
+    _id: string;
+    name: string;
+    email: string;
+    role: 'user' | 'admin';
+    lastLoginAt?: string;
+    createdAt?: string;
+}
+
+export interface UserProfileFormData {
+    name: string;
+    email: string;
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+}
+
+export interface UserProfileProps {
+    user: UserProfile;
+    onUpdate?: (user: UserProfile) => void;
+    onDelete?: () => void;
+    isModal?: boolean;
+    onClose?: () => void;
+}
+
+export interface DeleteConfirmationProps {
+    isOpen: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+    userName: string;
+}
+
 export interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -75,7 +99,6 @@ export interface ModalProps {
     children: React.ReactNode;
 }
 
-// Button component props
 export interface ButtonProps {
     variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info';
     size?: 'sm' | 'md' | 'lg';
@@ -87,7 +110,6 @@ export interface ButtonProps {
     className?: string;
 }
 
-// Navigation props
 export interface NavItemProps {
     label: string;
     href: string;
@@ -97,7 +119,6 @@ export interface NavItemProps {
     disabled?: boolean;
 }
 
-// Cart related props
 export interface CartItemProps {
     book: BookData;
     quantity: number;
@@ -107,7 +128,6 @@ export interface CartItemProps {
     showActions?: boolean;
 }
 
-// Search and filter props
 export interface SearchFilterProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
@@ -121,7 +141,6 @@ export interface SearchFilterProps {
     onClear: () => void;
 }
 
-// Pagination props
 export interface PaginationProps {
     currentPage: number;
     totalPages: number;
@@ -130,7 +149,6 @@ export interface PaginationProps {
     showPrevNext?: boolean;
 }
 
-// Loading state props
 export interface LoadingProps {
     isLoading: boolean;
     message?: string;
@@ -138,7 +156,6 @@ export interface LoadingProps {
     overlay?: boolean;
 }
 
-// Error display props
 export interface ErrorProps {
     error: string | null;
     onRetry?: () => void;
