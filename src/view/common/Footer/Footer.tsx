@@ -1,185 +1,392 @@
+import { motion, type Variants } from "framer-motion";
+import {
+    BookOpen,
+    Mail,
+    Phone,
+    MapPin,
+    Home,
+    Star,
+    Clock,
+    User,
+    Heart
+} from "lucide-react";
+
 export function Footer() {
+    const currentYear = new Date().getFullYear();
+
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut"
+            }
+        }
+    };
+
+    const socialVariants: Variants = {
+        hidden: { scale: 0, rotate: -180 },
+        visible: {
+            scale: 1,
+            rotate: 0,
+            transition: {
+                type: "spring" as const,
+                stiffness: 200,
+                damping: 15
+            }
+        }
+    };
+
+    const backgroundAnimation1 = {
+        x: [0, 50, 0],
+        y: [0, -30, 0],
+        rotate: [0, 180, 360],
+        transition: {
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear" as const
+        }
+    };
+
+    const backgroundAnimation2 = {
+        x: [0, -40, 0],
+        y: [0, 20, 0],
+        rotate: [360, 180, 0],
+        transition: {
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear" as const
+        }
+    };
+
+    const heartAnimation = {
+        scale: [1, 1.2, 1],
+        rotate: [0, 15, -15, 0],
+        transition: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut" as const
+        }
+    };
+
+    const quickLinks = [
+        { name: 'Home', icon: Home },
+        { name: 'Browse Books', icon: BookOpen },
+        { name: 'New Arrivals', icon: Clock },
+        { name: 'Popular', icon: Star },
+        { name: 'Authors', icon: User }
+    ];
+
+    const socialLinks = [
+        {
+            name: 'Facebook',
+            href: 'https://facebook.com',
+            icon: () => (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+            )
+        },
+        {
+            name: 'Twitter',
+            href: 'https://twitter.com',
+            icon: () => (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+            )
+        },
+        {
+            name: 'Instagram',
+            href: 'https://instagram.com',
+            icon: () => (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987 6.62 0 11.987-5.367 11.987-11.987C24.014 5.367 18.637.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.435-3.396-1.377-.947-.942-1.377-2.093-1.377-3.396s.43-2.448 1.377-3.396c.948-.947 2.099-1.377 3.396-1.377s2.448.43 3.396 1.377c.946.948 1.376 2.099 1.376 3.396s-.43 2.454-1.376 3.396c-.948.942-2.099 1.377-3.396 1.377zm7.598-9.02h-1.78c-.893 0-1.327-.434-1.327-1.327v-1.78c0-.893.434-1.327 1.327-1.327h1.78c.893 0 1.327.434 1.327 1.327v1.78c0 .893-.434 1.327-1.327 1.327z"/>
+                </svg>
+            )
+        },
+        {
+            name: 'LinkedIn',
+            href: 'https://linkedin.com',
+            icon: () => (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+            )
+        },
+        {
+            name: 'GitHub',
+            href: 'https://github.com',
+            icon: () => (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            )
+        }
+    ];
+
     return (
-        <footer className="bg-gradient-to-br from-gray-800 via-gray-900 to-black text-white relative overflow-hidden">
-            {/* Decorative top border */}
-            <div className="h-1 bg-gradient-to-r from-[#B0DB9C] via-[#CAE8BD] to-[#DDF6D2]"></div>
-
+        <motion.footer
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="bg-white dark:bg-[#004030] border-t border-[#4A9782]/20 relative overflow-hidden"
+        >
             {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#B0DB9C]/10 to-transparent rounded-full -translate-y-48 translate-x-48"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#CAE8BD]/10 to-transparent rounded-full translate-y-32 -translate-x-32"></div>
+            <motion.div
+                animate={backgroundAnimation1}
+                className="absolute top-5 right-10 w-20 h-20 bg-[#4A9782]/5 rounded-full"
+            />
+            <motion.div
+                animate={backgroundAnimation2}
+                className="absolute bottom-5 left-10 w-16 h-16 bg-[#004030]/5 rounded-xl"
+            />
 
-            <div className="relative container mx-auto px-4 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-
+            <div className="container mx-auto px-6 py-12">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+                >
                     {/* Brand Section */}
-                    <div className="lg:col-span-2">
+                    <motion.div variants={itemVariants} className="lg:col-span-1">
+                        {/* Professional Logo */}
                         <div className="flex items-center mb-6">
-                            <div className="w-12 h-12 bg-gradient-to-br from-[#B0DB9C] to-[#CAE8BD] rounded-2xl mr-4 flex items-center justify-center shadow-lg">
-                                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"></path>
-                                </svg>
+                            <div className="w-12 h-12 bg-gradient-to-br from-[#004030] to-[#4A9782] rounded-xl mr-4 flex items-center justify-center shadow-lg border border-[#4A9782]/20">
+                                <BookOpen className="w-6 h-6 text-white" strokeWidth={2.5} />
                             </div>
-                            <span className="text-3xl font-bold bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] bg-clip-text text-transparent">
-                                LibraryHub
-                            </span>
+                            <div className="flex flex-col">
+                                <span className="text-2xl font-bold text-[#004030] dark:text-white leading-tight">
+                                    Library<span className="text-[#4A9782]">Hub</span>
+                                </span>
+                                <span className="text-xs text-[#4A9782] font-medium tracking-wider uppercase">
+                                    Digital Library System
+                                </span>
+                            </div>
                         </div>
-                        <p className="text-gray-300 leading-relaxed max-w-md mb-8">
-                            Your premier destination for discovering, exploring, and managing an extensive collection of books.
-                            Join thousands of readers in their literary journey with our comprehensive library management system.
+
+                        <p className="text-[#004030]/70 dark:text-white/70 text-sm leading-relaxed mb-6">
+                            Your premier destination for discovering and managing an extensive collection of books.
+                            Join thousands of readers in their literary journey.
                         </p>
 
                         {/* Social Media Links */}
-                        <div className="flex space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-full flex items-center justify-center hover:from-[#B0DB9C]/30 hover:to-[#CAE8BD]/30 transition-all duration-200 cursor-pointer group">
-                                <svg className="w-6 h-6 text-[#B0DB9C] group-hover:text-[#CAE8BD] transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
-                                </svg>
-                            </div>
-                            <div className="w-12 h-12 bg-gradient-to-r from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-full flex items-center justify-center hover:from-[#B0DB9C]/30 hover:to-[#CAE8BD]/30 transition-all duration-200 cursor-pointer group">
-                                <svg className="w-6 h-6 text-[#B0DB9C] group-hover:text-[#CAE8BD] transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
-                                </svg>
-                            </div>
-                            <div className="w-12 h-12 bg-gradient-to-r from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-full flex items-center justify-center hover:from-[#B0DB9C]/30 hover:to-[#CAE8BD]/30 transition-all duration-200 cursor-pointer group">
-                                <svg className="w-6 h-6 text-[#B0DB9C] group-hover:text-[#CAE8BD] transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                                </svg>
-                            </div>
+                        <div className="flex space-x-2">
+                            {socialLinks.map((social, index) => (
+                                <motion.a
+                                    key={social.name}
+                                    href={social.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    variants={socialVariants}
+                                    custom={index}
+                                    whileHover={{
+                                        scale: 1.1,
+                                        rotateY: 15,
+                                        boxShadow: "0 5px 15px rgba(0, 64, 48, 0.3)"
+                                    }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="w-8 h-8 bg-[#4A9782]/10 dark:bg-white/10 rounded-lg flex items-center justify-center hover:bg-[#4A9782] dark:hover:bg-[#4A9782] transition-all duration-300 group"
+                                    style={{ transformStyle: "preserve-3d" }}
+                                >
+                                    <div className="text-[#004030] dark:text-white group-hover:text-white transition-colors duration-300">
+                                        <social.icon />
+                                    </div>
+                                </motion.a>
+                            ))}
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Quick Links */}
-                    <div>
-                        <h3 className="text-xl font-bold mb-6 text-[#B0DB9C] flex items-center">
-                            <div className="w-2 h-8 bg-gradient-to-b from-[#B0DB9C] to-[#CAE8BD] rounded-full mr-3"></div>
+                    <motion.div variants={itemVariants}>
+                        <h3 className="text-lg font-bold text-[#004030] dark:text-white mb-4 flex items-center">
+                            <motion.div
+                                whileHover={{ scale: 1.2 }}
+                                className="w-1 h-6 bg-gradient-to-b from-[#004030] to-[#4A9782] rounded-full mr-2"
+                            />
                             Quick Links
                         </h3>
-                        <ul className="space-y-4">
-                            {[
-                                { name: 'Home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-                                { name: 'Browse Books', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
-                                { name: 'New Arrivals', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-                                { name: 'Popular Books', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
-                                { name: 'Author Spotlight', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' }
-                            ].map((link) => (
-                                <li key={link.name}>
-                                    <a href="#" className="text-gray-300 hover:text-[#B0DB9C] transition-colors duration-200 flex items-center group">
-                                        <div className="w-8 h-8 bg-[#CAE8BD]/10 rounded-lg flex items-center justify-center mr-3 group-hover:bg-[#B0DB9C]/20 transition-colors duration-200">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={link.icon} />
-                                            </svg>
-                                        </div>
-                                        <span className="font-medium">{link.name}</span>
-                                    </a>
-                                </li>
+                        <ul className="space-y-2">
+                            {quickLinks.map((link, index) => (
+                                <motion.li
+                                    key={link.name}
+                                    initial={{ x: -20, opacity: 0 }}
+                                    whileInView={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <motion.a
+                                        href="#"
+                                        whileHover={{
+                                            x: 5,
+                                            color: "#4A9782"
+                                        }}
+                                        className="text-[#004030]/70 dark:text-white/70 hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-all duration-200 flex items-center group text-sm"
+                                    >
+                                        <motion.div
+                                            whileHover={{ rotate: 360 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="w-6 h-6 bg-[#4A9782]/10 dark:bg-white/10 rounded-md flex items-center justify-center mr-2 group-hover:bg-[#4A9782]/20 transition-colors duration-200"
+                                        >
+                                            <link.icon className="w-3 h-3" />
+                                        </motion.div>
+                                        {link.name}
+                                    </motion.a>
+                                </motion.li>
                             ))}
                         </ul>
-                    </div>
+                    </motion.div>
 
                     {/* Contact Info */}
-                    <div>
-                        <h3 className="text-xl font-bold mb-6 text-[#B0DB9C] flex items-center">
-                            <div className="w-2 h-8 bg-gradient-to-b from-[#B0DB9C] to-[#CAE8BD] rounded-full mr-3"></div>
-                            Contact Us
-                        </h3>
-                        <div className="space-y-6">
-                            <div className="flex items-start space-x-4">
-                                <div className="w-10 h-10 bg-gradient-to-r from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
-                                    <svg className="w-5 h-5 text-[#B0DB9C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-[#CAE8BD] font-semibold">Email</p>
-                                    <p className="text-gray-300 hover:text-[#B0DB9C] transition-colors duration-200 cursor-pointer">support@libraryhub.com</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start space-x-4">
-                                <div className="w-10 h-10 bg-gradient-to-r from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
-                                    <svg className="w-5 h-5 text-[#B0DB9C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-[#CAE8BD] font-semibold">Phone</p>
-                                    <p className="text-gray-300 hover:text-[#B0DB9C] transition-colors duration-200 cursor-pointer">(123) 456-7890</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start space-x-4">
-                                <div className="w-10 h-10 bg-gradient-to-r from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
-                                    <svg className="w-5 h-5 text-[#B0DB9C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-[#CAE8BD] font-semibold">Address</p>
-                                    <p className="text-gray-300">123 Library Lane<br/>Book City, BC 12345</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Newsletter Section */}
-                <div className="mt-16 pt-12 border-t border-gray-700">
-                    <div className="max-w-2xl mx-auto text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-[#B0DB9C] to-[#CAE8BD] rounded-2xl mx-auto mb-6 flex items-center justify-center">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <h4 className="text-2xl font-bold text-[#B0DB9C] mb-3">Stay Updated</h4>
-                        <p className="text-gray-300 mb-8 text-lg">Get notified about new book arrivals, exclusive events, and special offers</p>
-                        <div className="flex max-w-md mx-auto">
-                            <input
-                                type="email"
-                                placeholder="Enter your email address"
-                                className="flex-1 px-6 py-4 bg-gray-800 rounded-l-lg border border-gray-700 focus:outline-none focus:border-[#B0DB9C] text-white placeholder-gray-400"
+                    <motion.div variants={itemVariants}>
+                        <h3 className="text-lg font-bold text-[#004030] dark:text-white mb-4 flex items-center">
+                            <motion.div
+                                whileHover={{ scale: 1.2 }}
+                                className="w-1 h-6 bg-gradient-to-b from-[#004030] to-[#4A9782] rounded-full mr-2"
                             />
-                            <button className="px-6 py-4 bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] rounded-r-lg text-gray-900 font-bold hover:shadow-lg hover:from-[#CAE8BD] hover:to-[#ECFAE5] transition-all duration-300">
-                                Subscribe
-                            </button>
+                            Contact
+                        </h3>
+                        <div className="space-y-3">
+                            {[
+                                { icon: Mail, label: 'Email', value: 'hello@libraryhub.com' },
+                                { icon: Phone, label: 'Phone', value: '+1 (555) 123-4567' },
+                                { icon: MapPin, label: 'Address', value: '123 Library St, Book City' }
+                            ].map((contact, index) => (
+                                <motion.div
+                                    key={contact.label}
+                                    initial={{ x: 20, opacity: 0 }}
+                                    whileInView={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    viewport={{ once: true }}
+                                    whileHover={{ x: 5 }}
+                                    className="flex items-start space-x-3 cursor-pointer group"
+                                >
+                                    <motion.div
+                                        whileHover={{
+                                            scale: 1.1,
+                                            rotateY: 15,
+                                            boxShadow: "0 5px 15px rgba(74, 151, 130, 0.3)"
+                                        }}
+                                        className="w-7 h-7 bg-[#4A9782]/10 dark:bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[#4A9782]/20 transition-all duration-300"
+                                        style={{ transformStyle: "preserve-3d" }}
+                                    >
+                                        <contact.icon className="w-3.5 h-3.5 text-[#4A9782]" />
+                                    </motion.div>
+                                    <div>
+                                        <p className="text-xs text-[#4A9782] font-medium">{contact.label}</p>
+                                        <p className="text-sm text-[#004030]/70 dark:text-white/70 group-hover:text-[#4A9782] dark:group-hover:text-[#4A9782] transition-colors duration-200">
+                                            {contact.value}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
-                        <p className="text-gray-400 text-sm mt-4">We respect your privacy. Unsubscribe at any time.</p>
-                    </div>
-                </div>
+                    </motion.div>
 
-                {/* Footer Navigation */}
-                <div className="mt-16 pt-8 border-t border-gray-700">
-                    <div className="flex flex-wrap justify-center gap-8 mb-8">
-                        {['About Us', 'Privacy Policy', 'Terms of Service', 'FAQ', 'Support', 'Careers'].map((item) => (
-                            <a
-                                key={item}
-                                href="#"
-                                className="text-gray-400 hover:text-[#B0DB9C] transition-colors duration-200"
+                    {/* Newsletter */}
+                    <motion.div variants={itemVariants}>
+                        <h3 className="text-lg font-bold text-[#004030] dark:text-white mb-4 flex items-center">
+                            <motion.div
+                                whileHover={{ scale: 1.2 }}
+                                className="w-1 h-6 bg-gradient-to-b from-[#004030] to-[#4A9782] rounded-full mr-2"
+                            />
+                            Newsletter
+                        </h3>
+                        <p className="text-sm text-[#004030]/70 dark:text-white/70 mb-4">
+                            Get updates on new arrivals and events
+                        </p>
+                        <div className="space-y-2">
+                            <motion.input
+                                whileFocus={{
+                                    scale: 1.02,
+                                    boxShadow: "0 0 20px rgba(74, 151, 130, 0.3)"
+                                }}
+                                type="email"
+                                placeholder="Your email"
+                                className="w-full px-3 py-2 text-sm border border-[#4A9782]/20 rounded-lg bg-white dark:bg-[#004030] text-[#004030] dark:text-white placeholder-[#4A9782]/60 focus:border-[#4A9782] focus:outline-none transition-all duration-200"
+                            />
+                            <motion.button
+                                whileHover={{
+                                    scale: 1.05,
+                                    boxShadow: "0 5px 15px rgba(0, 64, 48, 0.3)",
+                                    rotateY: 5
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                                className="w-full bg-gradient-to-r from-[#004030] to-[#4A9782] text-white px-3 py-2 rounded-lg text-sm font-medium shadow-md transition-all duration-300"
+                                style={{ transformStyle: "preserve-3d" }}
                             >
-                                {item}
-                            </a>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Copyright */}
-                <div className="text-center pt-8 border-t border-gray-800">
-                    <div className="flex items-center justify-center mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#B0DB9C]/20 to-[#CAE8BD]/20 rounded-xl flex items-center justify-center">
-                            <svg className="w-5 h-5 text-[#B0DB9C]" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12zm-1-5a1 1 0 112 0v1a1 1 0 11-2 0v-1zm0-3a1 1 0 112 0 1 1 0 01-2 0z" clipRule="evenodd" />
-                            </svg>
+                                Subscribe
+                            </motion.button>
                         </div>
-                    </div>
-                    <p className="text-gray-400">© {new Date().getFullYear()} LibraryHub. All rights reserved.</p>
-                    <p className="text-gray-500 text-sm mt-2">
-                        Designed with <span className="text-[#B0DB9C]">♥</span> for book lovers everywhere
-                    </p>
-                </div>
-            </div>
+                    </motion.div>
+                </motion.div>
 
-            {/* Decorative bottom border */}
-            <div className="h-1 bg-gradient-to-r from-[#DDF6D2] via-[#CAE8BD] to-[#B0DB9C]"></div>
-        </footer>
+                {/* Bottom Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    className="mt-8 pt-6 border-t border-[#4A9782]/20"
+                >
+                    <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                        {/* Footer Links */}
+                        <div className="flex flex-wrap gap-4 text-sm">
+                            {['Privacy Policy', 'Terms of Service', 'FAQ', 'Support'].map((item, index) => (
+                                <motion.a
+                                    key={item}
+                                    href="#"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    viewport={{ once: true }}
+                                    whileHover={{
+                                        color: "#4A9782",
+                                        y: -2
+                                    }}
+                                    className="text-[#004030]/60 dark:text-white/60 hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-all duration-200"
+                                >
+                                    {item}
+                                </motion.a>
+                            ))}
+                        </div>
+
+                        {/* Copyright */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.6 }}
+                            className="flex items-center text-sm text-[#004030]/60 dark:text-white/60"
+                        >
+                            <span>© {currentYear} LibraryHub. Made with</span>
+                            <motion.div
+                                animate={heartAnimation}
+                                className="mx-1"
+                            >
+                                <Heart className="w-4 h-4 text-[#4A9782] fill-current" />
+                            </motion.div>
+                            <span>for book lovers</span>
+                        </motion.div>
+                    </div>
+                </motion.div>
+            </div>
+        </motion.footer>
     );
 }

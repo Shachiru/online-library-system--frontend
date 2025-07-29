@@ -1,153 +1,418 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../../store/store.ts";
-import { getAllBooks } from "../../../slices/bookSlice.ts";
-import { BookCard } from "../../common/BookCard/BookCard.tsx";
+import {useEffect} from "react";
+import {useDispatch, useSelector} from "react-redux";
+import {motion, type Variants} from "framer-motion";
+import type {AppDispatch, RootState} from "../../../store/store.ts";
+import {getAllBooks} from "../../../slices/bookSlice.ts";
+import {BookCard} from "../../common/BookCard/BookCard.tsx";
 
 export function HomePage() {
     const dispatch = useDispatch<AppDispatch>();
-    const { list } = useSelector((state: RootState) => state.books);
+    const {list} = useSelector((state: RootState) => state.books);
 
     useEffect(() => {
         dispatch(getAllBooks());
     }, [dispatch]);
 
+    const containerVariants: Variants = {
+        hidden: {opacity: 0},
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: {y: 20, opacity: 0},
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                duration: 0.6,
+                ease: [0.4, 0, 0.2, 1]
+            }
+        }
+    };
+
+    const cardVariants: Variants = {
+        hidden: {y: 50, opacity: 0, scale: 0.9},
+        visible: {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            transition: {
+                duration: 0.5,
+                ease: [0.4, 0, 0.2, 1]
+            }
+        }
+    };
+
+    const floatingAnimation = {
+        y: [-10, 10, -10],
+        transition: {
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut" as const
+        }
+    };
+
+    const floatingAnimationDelayed1 = {
+        y: [-10, 10, -10],
+        transition: {
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+            delay: 1
+        }
+    };
+
+    const floatingAnimationDelayed2 = {
+        y: [-10, 10, -10],
+        transition: {
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut" as const,
+            delay: 2
+        }
+    };
+
+    const backgroundAnimation1 = {
+        x: [0, 100, 0],
+        y: [0, -50, 0],
+        rotate: [0, 180, 360],
+        transition: {
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear" as const
+        }
+    };
+
+    const backgroundAnimation2 = {
+        x: [0, -80, 0],
+        y: [0, 30, 0],
+        rotate: [360, 180, 0],
+        transition: {
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear" as const
+        }
+    };
+
+    const loadingAnimation = {
+        rotateY: [0, 360],
+        transition: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "linear" as const
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#ECFAE5] via-white to-[#DDF6D2]">
+        <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#ECFAE5] to-[#DDF6D2] py-20">
-                {/* Decorative background elements */}
-                <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-[#B0DB9C]/20 to-transparent rounded-full -translate-x-48 -translate-y-48"></div>
-                <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-[#CAE8BD]/20 to-transparent rounded-full translate-x-48 translate-y-48"></div>
+            <motion.div
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                transition={{duration: 1}}
+                className="relative overflow-hidden bg-gradient-to-br from-white via-[#4A9782]/5 to-[#004030]/10 py-16"
+            >
+                {/* Floating 3D Elements */}
+                <motion.div
+                    animate={floatingAnimation}
+                    className="absolute top-20 left-10 w-16 h-16 bg-gradient-to-br from-[#4A9782]/20 to-[#004030]/20 rounded-xl rotate-12 blur-sm"
+                />
+                <motion.div
+                    animate={floatingAnimationDelayed1}
+                    className="absolute top-32 right-20 w-12 h-12 bg-gradient-to-br from-[#004030]/20 to-[#4A9782]/20 rounded-full blur-sm"
+                />
+                <motion.div
+                    animate={floatingAnimationDelayed2}
+                    className="absolute bottom-20 left-1/4 w-20 h-20 bg-gradient-to-br from-[#4A9782]/15 to-[#004030]/15 rounded-2xl rotate-45 blur-sm"
+                />
 
                 <div className="relative container mx-auto px-6 text-center">
-                    <div className="max-w-4xl mx-auto">
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="max-w-3xl mx-auto"
+                    >
+                        <motion.h1
+                            variants={itemVariants}
+                            className="text-4xl md:text-6xl font-bold mb-4 leading-tight"
+                        >
                             Welcome to{" "}
-                            <span className="bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] bg-clip-text text-transparent">
+                            <motion.span
+                                className="bg-gradient-to-r from-[#004030] to-[#4A9782] bg-clip-text text-transparent"
+                                whileHover={{scale: 1.05}}
+                                transition={{duration: 0.3}}
+                            >
                                 LibraryHub
-                            </span>
-                        </h1>
-                        <p className="text-xl md:text-2xl text-gray-700 mb-8 leading-relaxed">
+                            </motion.span>
+                        </motion.h1>
+
+                        <motion.p
+                            variants={itemVariants}
+                            className="text-lg md:text-xl text-[#004030]/70 mb-6 leading-relaxed max-w-2xl mx-auto"
+                        >
                             Discover your next favorite book from our extensive collection of literature,
-                            fiction, and educational resources. Your gateway to endless knowledge and adventure.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                            <button className="bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:from-[#CAE8BD] hover:to-[#B0DB9C] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            fiction, and educational resources.
+                        </motion.p>
+
+                        <motion.div
+                            variants={itemVariants}
+                            className="flex flex-col sm:flex-row gap-3 justify-center items-center"
+                        >
+                            <motion.button
+                                whileHover={{
+                                    scale: 1.05,
+                                    boxShadow: "0 10px 30px rgba(0, 64, 48, 0.3)",
+                                    rotateY: 5
+                                }}
+                                whileTap={{scale: 0.95}}
+                                className="bg-gradient-to-r from-[#004030] to-[#4A9782] text-white px-6 py-3 rounded-xl font-medium text-base shadow-lg transition-all duration-300 flex items-center space-x-2"
+                                style={{transformStyle: "preserve-3d"}}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                                 <span>Explore Books</span>
-                            </button>
-                            <button className="border-2 border-[#CAE8BD] text-[#B0DB9C] px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-[#CAE8BD] hover:text-white transition-all duration-300 flex items-center space-x-2">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </motion.button>
+
+                            <motion.button
+                                whileHover={{
+                                    scale: 1.05,
+                                    backgroundColor: "#4A9782",
+                                    color: "white",
+                                    rotateY: -5
+                                }}
+                                whileTap={{scale: 0.95}}
+                                className="border-2 border-[#4A9782] text-[#004030] px-6 py-3 rounded-xl font-medium text-base transition-all duration-300 flex items-center space-x-2"
+                                style={{transformStyle: "preserve-3d"}}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                 </svg>
-                                <span>Learn More</span>
-                            </button>
-                        </div>
-                    </div>
+                                <span>Browse Collection</span>
+                            </motion.button>
+                        </motion.div>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Stats Section */}
-            <div className="py-16 bg-white/60 backdrop-blur-sm">
+            <motion.div
+                initial={{opacity: 0, y: 50}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.8}}
+                className="py-12 bg-white border-t border-[#4A9782]/10"
+            >
                 <div className="container mx-auto px-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        <div className="text-center group">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[#B0DB9C] to-[#CAE8BD] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                </svg>
-                            </div>
-                            <h3 className="text-3xl font-bold text-gray-800 mb-2">{list.length}+</h3>
-                            <p className="text-gray-600 font-medium">Books Available</p>
-                        </div>
-                        <div className="text-center group">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[#CAE8BD] to-[#DDF6D2] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-3xl font-bold text-gray-800 mb-2">1000+</h3>
-                            <p className="text-gray-600 font-medium">Happy Readers</p>
-                        </div>
-                        <div className="text-center group">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[#DDF6D2] to-[#ECFAE5] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                <svg className="w-8 h-8 text-[#B0DB9C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-3xl font-bold text-gray-800 mb-2">50+</h3>
-                            <p className="text-gray-600 font-medium">Genres</p>
-                        </div>
-                        <div className="text-center group">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[#B0DB9C]/80 to-[#CAE8BD]/80 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-3xl font-bold text-gray-800 mb-2">24/7</h3>
-                            <p className="text-gray-600 font-medium">Access</p>
-                        </div>
-                    </div>
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{once: true}}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-6"
+                    >
+                        {[
+                            {
+                                icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+                                value: `${list.length}+`,
+                                label: "Books"
+                            },
+                            {
+                                icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+                                value: "500+",
+                                label: "Readers"
+                            },
+                            {
+                                icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10",
+                                value: "25+",
+                                label: "Categories"
+                            },
+                            {
+                                icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+                                value: "24/7",
+                                label: "Access"
+                            }
+                        ].map((stat, index) => (
+                            <motion.div
+                                key={index}
+                                variants={cardVariants}
+                                whileHover={{
+                                    scale: 1.05,
+                                    rotateY: 10,
+                                    boxShadow: "0 10px 25px rgba(0, 64, 48, 0.15)"
+                                }}
+                                className="text-center p-4 rounded-xl bg-gradient-to-br from-white to-[#4A9782]/5 border border-[#4A9782]/10 cursor-pointer"
+                                style={{transformStyle: "preserve-3d"}}
+                            >
+                                <motion.div
+                                    whileHover={{rotateZ: 360}}
+                                    transition={{duration: 0.6}}
+                                    className="w-10 h-10 bg-gradient-to-br from-[#004030] to-[#4A9782] rounded-xl mx-auto mb-3 flex items-center justify-center shadow-md"
+                                >
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                         viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d={stat.icon}/>
+                                    </svg>
+                                </motion.div>
+                                <h3 className="text-2xl font-bold text-[#004030] mb-1">{stat.value}</h3>
+                                <p className="text-[#4A9782] font-medium text-sm">{stat.label}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Books Section */}
-            <div className="py-20">
+            <motion.div
+                initial={{opacity: 0}}
+                whileInView={{opacity: 1}}
+                viewport={{once: true}}
+                transition={{duration: 0.8}}
+                className="py-16"
+            >
                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-                            Featured <span className="bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] bg-clip-text text-transparent">Books</span>
+                    <motion.div
+                        initial={{y: 30, opacity: 0}}
+                        whileInView={{y: 0, opacity: 1}}
+                        viewport={{once: true}}
+                        transition={{duration: 0.6}}
+                        className="text-center mb-12"
+                    >
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#004030] mb-3">
+                            Featured <span
+                            className="bg-gradient-to-r from-[#004030] to-[#4A9782] bg-clip-text text-transparent">Collection</span>
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Discover handpicked selections from our extensive library collection
+                        <p className="text-lg text-[#004030]/70 max-w-xl mx-auto mb-4">
+                            Handpicked selections from our extensive library
                         </p>
-                        <div className="w-24 h-1 bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] mx-auto mt-6 rounded-full"></div>
-                    </div>
+                        <motion.div
+                            initial={{width: 0}}
+                            whileInView={{width: 60}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.8, delay: 0.3}}
+                            className="h-1 bg-gradient-to-r from-[#004030] to-[#4A9782] mx-auto rounded-full"
+                        />
+                    </motion.div>
 
                     {list.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                            {list.map((book) => (
-                                <BookCard key={book._id} data={book} />
+                        <motion.div
+                            variants={containerVariants}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{once: true}}
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                        >
+                            {list.map((book, index) => (
+                                <motion.div
+                                    key={book._id}
+                                    variants={cardVariants}
+                                    custom={index}
+                                    whileHover={{
+                                        y: -10,
+                                        rotateY: 5,
+                                        boxShadow: "0 20px 40px rgba(0, 64, 48, 0.2)"
+                                    }}
+                                    style={{transformStyle: "preserve-3d"}}
+                                >
+                                    <BookCard data={book}/>
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     ) : (
-                        <div className="text-center py-20">
-                            <div className="w-24 h-24 bg-gradient-to-br from-[#ECFAE5] to-[#DDF6D2] rounded-3xl mx-auto mb-6 flex items-center justify-center">
-                                <svg className="w-12 h-12 text-[#CAE8BD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        <motion.div
+                            initial={{opacity: 0, scale: 0.9}}
+                            animate={{opacity: 1, scale: 1}}
+                            transition={{duration: 0.6}}
+                            className="text-center py-16"
+                        >
+                            <motion.div
+                                animate={loadingAnimation}
+                                className="w-16 h-16 bg-gradient-to-br from-[#004030]/10 to-[#4A9782]/10 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                            >
+                                <svg className="w-8 h-8 text-[#4A9782]" fill="none" stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                 </svg>
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-700 mb-4">Loading Books...</h3>
-                            <p className="text-gray-500">We're fetching the latest books from our collection</p>
-                            <div className="flex justify-center mt-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B0DB9C]"></div>
-                            </div>
-                        </div>
+                            </motion.div>
+                            <h3 className="text-xl font-bold text-[#004030] mb-2">Loading Collection...</h3>
+                            <p className="text-[#4A9782]">Fetching the latest books</p>
+                        </motion.div>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             {/* CTA Section */}
-            <div className="py-20 bg-gradient-to-r from-[#B0DB9C] to-[#CAE8BD] relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/5"></div>
+            <motion.div
+                initial={{opacity: 0, y: 50}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.8}}
+                className="py-16 bg-gradient-to-r from-[#004030] to-[#4A9782] relative overflow-hidden"
+            >
+                {/* Animated background elements */}
+                <motion.div
+                    animate={backgroundAnimation1}
+                    className="absolute top-10 left-10 w-20 h-20 bg-white/5 rounded-full"
+                />
+                <motion.div
+                    animate={backgroundAnimation2}
+                    className="absolute bottom-10 right-10 w-16 h-16 bg-white/5 rounded-xl"
+                />
+
                 <div className="relative container mx-auto px-6 text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                        Ready to Start Reading?
-                    </h2>
-                    <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                        Join thousands of book lovers and start your literary journey today
-                    </p>
-                    <button className="bg-white text-[#B0DB9C] px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2 mx-auto">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <motion.h2
+                        initial={{y: 30, opacity: 0}}
+                        whileInView={{y: 0, opacity: 1}}
+                        viewport={{once: true}}
+                        transition={{duration: 0.6}}
+                        className="text-3xl md:text-4xl font-bold text-white mb-4"
+                    >
+                        Start Your Reading Journey
+                    </motion.h2>
+
+                    <motion.p
+                        initial={{y: 30, opacity: 0}}
+                        whileInView={{y: 0, opacity: 1}}
+                        viewport={{once: true}}
+                        transition={{duration: 0.6, delay: 0.2}}
+                        className="text-lg text-white/90 mb-6 max-w-xl mx-auto"
+                    >
+                        Join our community of book lovers and discover your next great read
+                    </motion.p>
+
+                    <motion.button
+                        initial={{y: 30, opacity: 0}}
+                        whileInView={{y: 0, opacity: 1}}
+                        viewport={{once: true}}
+                        transition={{duration: 0.6, delay: 0.4}}
+                        whileHover={{
+                            scale: 1.05,
+                            boxShadow: "0 15px 35px rgba(255, 255, 255, 0.3)",
+                            rotateY: 5
+                        }}
+                        whileTap={{scale: 0.95}}
+                        className="bg-white text-[#004030] px-6 py-3 rounded-xl font-bold text-base shadow-lg transition-all duration-300 flex items-center space-x-2 mx-auto"
+                        style={{transformStyle: "preserve-3d"}}
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
-                        <span>Browse All Books</span>
-                    </button>
+                        <span>Explore Library</span>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 }
