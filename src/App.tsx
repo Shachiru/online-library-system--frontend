@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { isTokenExpired } from "./auth/auth.ts";
 import { DefaultLayout } from "./view/common/DefaultLayout/DefaultLayout.tsx";
 import { AuthPage } from "./view/pages/Auth/AuthPage.tsx";
+import {ToastContainer} from "react-toastify";
 
 function App() {
     const navigate = useNavigate();
@@ -18,12 +19,17 @@ function App() {
     }, [navigate, location.pathname]);
 
     return (
-        <Routes>
-            <Route path="/*" element={<DefaultLayout/>}></Route>
-            <Route path="/auth" element={<AuthPage/>}></Route>
-            <Route path="/login" element={<AuthPage/>}></Route>
-            <Route path="/signup" element={<AuthPage/>}></Route>
-        </Routes>
+        <div>
+            {/* Other components */}
+            <Routes>
+                <Route path="/*" element={<DefaultLayout/>}></Route>
+                <Route path="/auth" element={<AuthPage/>}></Route>
+                <Route path="/login" element={<AuthPage/>}></Route>
+                <Route path="/signup" element={<AuthPage/>}></Route>
+            </Routes>
+            <ToastContainer position="top-right" autoClose={3000} />
+        </div>
+
     );
 }
 

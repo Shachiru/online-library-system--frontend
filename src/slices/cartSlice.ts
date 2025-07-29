@@ -1,4 +1,4 @@
-import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type {BookData} from "../model/BookData.ts";
 import type {CartItem} from "../model/CartItem.ts";
 
@@ -7,37 +7,41 @@ interface CartState {
 }
 
 const initialState: CartState = {
-    items: []
-}
+    items: [],
+};
 
 const cartSlice = createSlice({
     name: 'cart',
     initialState,
     reducers: {
-        addItemToCart: (state: CartState, action: PayloadAction<BookData>) => {
+        addItemToCart(state, action: PayloadAction<BookData>) {
             const existingItem = state.items.find((item) => item.book._id === action.payload._id);
-            if (!existingItem) {
-                state.items.push({
-                    book: action.payload,
-                    itemCount: 1
-                })
+            if (existingItem) {
+                existingItem.itemCount += 1;
+            } else {
+                state.items.push({ book: action.payload, itemCount: 1 });
             }
         },
-        increaseQuantity(state: CartState, action: PayloadAction<string>) {
-            const item = state.items.find((existingItem) => existingItem.book._id === action.payload)
+        decreaseQuantity(state, action: PayloadAction<string>) {
+            const item = state.items.find((item) => item.book._id === action.payload);
             if (item) {
-                item.itemCount += 1
+                item.itemCount -= 1;
+                if (item.itemCount <= 0) {
+                    state.items = state.items.filter((i) => i.book._id !== action.payload);
+                }
             }
         },
-        decreaseQuantity(state: CartState, action: PayloadAction<string>) {
-            const item = state.items.find((existingItem) => existingItem.book._id === action.payload)
-            if (item && item.itemCount > 1) {
-                item.itemCount -= 1
+        increaseQuantity(state, action: PayloadAction<string>) {
+            const item = state.items.find((item) => item.book._id === action.payload);
+            if (item) {
+                item.itemCount += 1;
             }
-        }
-    }
+        },
+        clearCart(state) {
+            state.items = [];
+        },
+    },
 });
 
-export const {addItemToCart, increaseQuantity, decreaseQuantity} = cartSlice.actions;
-
+export const { addItemToCart, decreaseQuantity, increaseQuantity, clearCart } = cartSlice.actions;
 export default cartSlice.reducer;
