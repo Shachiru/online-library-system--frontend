@@ -19,8 +19,6 @@ import {
 } from "lucide-react"
 import {motion, AnimatePresence, type Variants} from "framer-motion"
 import {backendApi} from "../../../api.ts";
-import type {UserData} from "../../../model/UserData.ts"
-import {getUserFromToken} from "../../../auth/auth.ts"
 import {useLocation, useNavigate} from "react-router-dom";
 
 type LoginFormData = {
@@ -86,15 +84,19 @@ export function AuthPage() {
 
             const response = await backendApi.post('/auth/login', userCredentials);
             console.log("Login response:", response.data);
-            const accessToken = response.data.accessToken;
-            const refreshToken = response.data.refreshToken;
+            const { user, accessToken, refreshToken } = response.data;
 
             localStorage.setItem('token', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('username', user.name);
+            localStorage.setItem('role', user.role);
+            localStorage.setItem('userId', user._id);
 
-            const user: UserData = getUserFromToken(accessToken);
-            localStorage.setItem('username', user.name as string);
-            localStorage.setItem('role', user.role as string);
+            console.log('AuthPage: Stored in localStorage:', {
+                username: user.name,
+                role: user.role,
+                userId: user._id,
+            });
 
             setIsSuccess(true);
             setTimeout(() => {

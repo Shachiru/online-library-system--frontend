@@ -1,6 +1,6 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {useNavigate, useLocation} from "react-router-dom";
+import {useState, useEffect} from "react";
+import {motion, AnimatePresence} from "framer-motion";
 import {
     Home,
     BookOpen,
@@ -16,8 +16,10 @@ import {
     BookmarkPlus,
     Library
 } from "lucide-react";
-import { backendApi } from "../../../api";
-import type { NavItemProps } from "../../../model/ComponentProps";
+import {backendApi} from "../../../api";
+import {getUserFromToken} from "../../../auth/auth.ts";
+import type {NavItemProps} from "../../../model/ComponentProps";
+import type {UserData} from "../../../model/UserData.ts";
 
 // Theme hook for dark/light mode
 const useTheme = () => {
@@ -40,12 +42,12 @@ const useTheme = () => {
         }
     }, [isDark]);
 
-    return { isDark, toggleTheme: () => setIsDark(!isDark) };
+    return {isDark, toggleTheme: () => setIsDark(!isDark)};
 };
 
 // User info interface
 interface UserInfo {
-    username: string | null;
+    name: string | null;
     role: string | null;
     userId: string | null;
 }
@@ -53,7 +55,7 @@ interface UserInfo {
 export function NavBar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { isDark, toggleTheme } = useTheme();
+    const {isDark, toggleTheme} = useTheme();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -63,24 +65,128 @@ export function NavBar() {
 
     // User information
     const [userInfo, setUserInfo] = useState<UserInfo>({
-        username: localStorage.getItem('username'),
-        role: localStorage.getItem('role'),
-        userId: localStorage.getItem('userId')
+        name: null,
+        role: null,
+        userId: null
     });
 
-    // Update user info when localStorage changes
+    // Fetch user data from /users/:id or fallback to localStorage/token
     useEffect(() => {
-        const handleStorageChange = () => {
+        const updateUserInfo = async () => {
+            const token = localStorage.getItem('token');
+            console.log('NavBar: Token found:', !!token);
+
+            let name: string | null = null;
+            let role: string | null = null;
+            let userId: string | null = localStorage.getItem('userId');
+
+            name = localStorage.getItem('username');
+            role = localStorage.getItem('role');
+            console.log('NavBar: Initial check - username:', name, 'role:', role);
+
+            if (token) {
+                try {
+                    const userData = getUserFromToken(token) as UserData;
+
+                    name = name || userData.name;
+                    role = role || userData.role;
+                    userId = userId || userData._id || null;
+                    console.log('NavBar: Token decoded - name:', name, 'role:', role);
+
+                    if (name) localStorage.setItem('username', name);
+                    if (role) localStorage.setItem('role', role);
+                    if (userId) localStorage.setItem('userId', userId);
+                } catch (error) {
+                    console.error('NavBar: Error decoding token:', error);
+                }
+            }
+
+            if (token && userId) {
+                try {
+                    // For admin users, use a specific endpoint if needed
+                    const endpoint = role === 'admin'
+                        ? `/admin/profile/${userId}` // Try admin-specific endpoint first
+                        : `/users/${userId}`;
+
+                    console.log(`NavBar: Fetching user data from ${endpoint}`);
+
+                    const response = await backendApi.get(endpoint, {
+                        headers: {Authorization: `Bearer ${token}`}
+                    });
+
+                    console.log('NavBar: API response:', response.data);
+
+                    // Check for various field names that might contain the username
+                    // This handles differences between admin and regular user data structures
+                    if (response.data) {
+                        // Try all possible field names for the username
+                        name = response.data.name ||
+                            response.data.username ||
+                            response.data.fullName ||
+                            response.data.displayName ||
+                            response.data.adminName || // Admin-specific field
+                            name;
+
+                        role = response.data.role || role;
+                        userId = response.data._id || response.data.id || userId;
+
+                        // Store updated values
+                        if (name) localStorage.setItem('username', name);
+                        if (role) localStorage.setItem('role', role);
+                        if (userId) localStorage.setItem('userId', userId);
+                    }
+                } catch (error) {
+                    console.error(`NavBar: Error fetching from ${role === 'admin' ? 'admin' : 'user'} endpoint:`, error);
+
+                    // If admin-specific endpoint fails, try the regular user endpoint as fallback
+                    if (role === 'admin') {
+                        try {
+                            console.log('NavBar: Trying fallback to regular user endpoint');
+                            const fallbackResponse = await backendApi.get(`/users/${userId}`, {
+                                headers: {Authorization: `Bearer ${token}`}
+                            });
+
+                            if (fallbackResponse.data) {
+                                name = fallbackResponse.data.name ||
+                                    fallbackResponse.data.username ||
+                                    fallbackResponse.data.fullName ||
+                                    name;
+
+                                if (name) localStorage.setItem('username', name);
+                            }
+                        } catch (fallbackError) {
+                            console.error('NavBar: Fallback endpoint also failed:', fallbackError);
+                        }
+                    }
+                }
+            }
+
+            if (!name && role === 'admin') {
+                name = 'Administrator';
+                localStorage.setItem('username', name);
+            }
+
+            console.log('NavBar: Final user info:', {name, role, userId});
+
             setUserInfo({
-                username: localStorage.getItem('username'),
-                role: localStorage.getItem('role'),
-                userId: localStorage.getItem('userId')
+                name: name || null,
+                role: role || null,
+                userId: userId || null
             });
         };
 
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
+        updateUserInfo();
+
+        window.addEventListener('storage', updateUserInfo);
+        const handleAuthChange = () => updateUserInfo();
+        window.addEventListener('authChange', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('storage', updateUserInfo);
+            window.removeEventListener('authChange', handleAuthChange);
+        };
+
+    }, [navigate, location.pathname]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -101,7 +207,7 @@ export function NavBar() {
             const refreshToken = localStorage.getItem('refreshToken');
 
             if (refreshToken) {
-                await backendApi.post('/auth/logout', { refreshToken });
+                await backendApi.post('/auth/logout', {refreshToken});
             }
 
             // Clear all auth data
@@ -109,7 +215,7 @@ export function NavBar() {
                 localStorage.removeItem(key);
             });
 
-            setUserInfo({ username: null, role: null, userId: null });
+            setUserInfo({name: null, role: null, userId: null});
             setIsProfileDropdownOpen(false);
 
             navigate('/login');
@@ -119,7 +225,7 @@ export function NavBar() {
             ['token', 'refreshToken', 'username', 'role', 'userId'].forEach(key => {
                 localStorage.removeItem(key);
             });
-            setUserInfo({ username: null, role: null, userId: null });
+            setUserInfo({name: null, role: null, userId: null});
             navigate('/login');
         } finally {
             setIsLoggingOut(false);
@@ -177,29 +283,30 @@ export function NavBar() {
 
     return (
         <motion.nav
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            initial={{y: -100, opacity: 0}}
+            animate={{y: 0, opacity: 1}}
+            transition={{duration: 0.6, ease: "easeOut"}}
             className="bg-white/95 dark:bg-[#004030]/95 backdrop-blur-md shadow-lg border-b border-[#4A9782]/20 sticky top-0 z-50"
         >
             <div className="container mx-auto px-4 lg:px-6">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{scale: 1.05}}
+                        whileTap={{scale: 0.95}}
                         className="flex items-center cursor-pointer"
                         onClick={() => navigate('/')}
                     >
                         <motion.div
-                            whileHover={{ rotate: 360 }}
-                            transition={{ duration: 0.6 }}
+                            whileHover={{rotate: 360}}
+                            transition={{duration: 0.6}}
                             className="w-10 h-10 bg-gradient-to-br from-[#4A9782] to-[#004030] rounded-xl mr-3 flex items-center justify-center shadow-md"
                         >
-                            <BookOpen className="w-6 h-6 text-white" />
+                            <BookOpen className="w-6 h-6 text-white"/>
                         </motion.div>
                         <div className="flex flex-col">
-                            <span className="text-xl font-bold bg-gradient-to-r from-[#004030] to-[#4A9782] dark:from-[#4A9782] dark:to-white bg-clip-text text-transparent">
+                            <span
+                                className="text-xl font-bold bg-gradient-to-r from-[#004030] to-[#4A9782] dark:from-[#4A9782] dark:to-white bg-clip-text text-transparent">
                                 LibraryHub
                             </span>
                             <span className="text-xs text-[#4A9782]/70 font-medium">
@@ -215,11 +322,11 @@ export function NavBar() {
                             return (
                                 <motion.button
                                     key={item.label}
-                                    initial={{ opacity: 0, y: -20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 + 0.3 }}
-                                    whileHover={{ y: -2, scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    initial={{opacity: 0, y: -20}}
+                                    animate={{opacity: 1, y: 0}}
+                                    transition={{delay: index * 0.1 + 0.3}}
+                                    whileHover={{y: -2, scale: 1.05}}
+                                    whileTap={{scale: 0.95}}
                                     onClick={() => navigate(item.href)}
                                     className={`relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
                                         item.isActive
@@ -227,13 +334,13 @@ export function NavBar() {
                                             : 'text-[#004030]/70 dark:text-white/70 hover:text-[#004030] dark:hover:text-white hover:bg-[#4A9782]/5'
                                     }`}
                                 >
-                                    <IconComponent size={18} />
+                                    <IconComponent size={18}/>
                                     <span>{item.label}</span>
                                     {item.isActive && (
                                         <motion.div
                                             layoutId="activeIndicator"
                                             className="absolute inset-0 bg-gradient-to-r from-[#4A9782]/10 to-[#004030]/10 rounded-lg border border-[#4A9782]/20"
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                            transition={{type: "spring", stiffness: 300, damping: 30}}
                                         />
                                     )}
                                 </motion.button>
@@ -245,9 +352,9 @@ export function NavBar() {
                     <div className="hidden md:flex items-center mx-8 flex-1 max-w-md">
                         <motion.div
                             className="relative w-full"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 }}
+                            initial={{opacity: 0, scale: 0.8}}
+                            animate={{opacity: 1, scale: 1}}
+                            transition={{delay: 0.4}}
                         >
                             <form onSubmit={handleSearch} className="relative">
                                 <input
@@ -259,11 +366,11 @@ export function NavBar() {
                                 />
                                 <motion.button
                                     type="submit"
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
+                                    whileHover={{scale: 1.1}}
+                                    whileTap={{scale: 0.9}}
                                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#4A9782] hover:text-[#004030] dark:hover:text-white transition-colors duration-200"
                                 >
-                                    <Search size={18} />
+                                    <Search size={18}/>
                                 </motion.button>
                             </form>
                         </motion.div>
@@ -273,30 +380,30 @@ export function NavBar() {
                     <div className="flex items-center space-x-3">
                         {/* Mobile Search Button */}
                         <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            whileHover={{scale: 1.1}}
+                            whileTap={{scale: 0.9}}
                             onClick={() => setIsSearchOpen(!isSearchOpen)}
                             className="md:hidden p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200 rounded-lg hover:bg-[#4A9782]/10"
                         >
-                            <Search size={20} />
+                            <Search size={20}/>
                         </motion.button>
 
                         {/* Theme Toggle */}
                         <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            whileHover={{scale: 1.1}}
+                            whileTap={{scale: 0.9}}
                             onClick={toggleTheme}
                             className="p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200 rounded-lg hover:bg-[#4A9782]/10"
                         >
-                            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                            {isDark ? <Sun size={20}/> : <Moon size={20}/>}
                         </motion.button>
 
                         {/* User Profile / Auth */}
-                        {userInfo.username ? (
+                        {userInfo.name ? (
                             <div className="relative">
                                 <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    whileHover={{scale: 1.05}}
+                                    whileTap={{scale: 0.95}}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setIsProfileDropdownOpen(!isProfileDropdownOpen);
@@ -304,16 +411,17 @@ export function NavBar() {
                                     className="flex items-center space-x-2 bg-gradient-to-r from-[#4A9782] to-[#004030] text-white px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200"
                                 >
                                     <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center">
-                                        <User size={16} />
+                                        <User size={16}/>
                                     </div>
-                                    <span className="text-sm font-medium hidden sm:inline max-w-20 truncate">
-                                        {userInfo.username}
-                                    </span>
+                                    <span className="text-sm font-medium sm:inline max-w-20 truncate">
+                                    {userInfo.name || "User"}
+                                </span>
                                     <motion.div
-                                        animate={{ rotate: isProfileDropdownOpen ? 180 : 0 }}
-                                        transition={{ duration: 0.2 }}
+                                        animate={{rotate: isProfileDropdownOpen ? 180 : 0}}
+                                        transition={{duration: 0.2}}
                                     >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" strokeWidth="2">
                                             <path d="M6 9l6 6 6-6"/>
                                         </svg>
                                     </motion.div>
@@ -322,10 +430,10 @@ export function NavBar() {
                                 <AnimatePresence>
                                     {isProfileDropdownOpen && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                            transition={{ duration: 0.2 }}
+                                            initial={{opacity: 0, y: -10, scale: 0.95}}
+                                            animate={{opacity: 1, y: 0, scale: 1}}
+                                            exit={{opacity: 0, y: -10, scale: 0.95}}
+                                            transition={{duration: 0.2}}
                                             className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#004030] rounded-xl shadow-xl border border-[#4A9782]/20 py-2 z-50"
                                             onClick={(e) => e.stopPropagation()}
                                         >
@@ -335,10 +443,11 @@ export function NavBar() {
                                                     Signed in as
                                                 </p>
                                                 <p className="text-sm text-[#4A9782] truncate font-semibold">
-                                                    {userInfo.username}
+                                                    {userInfo.name}
                                                 </p>
                                                 {userInfo.role && (
-                                                    <span className="inline-block mt-1 px-2 py-1 text-xs bg-[#4A9782]/10 text-[#4A9782] rounded-full font-medium capitalize">
+                                                    <span
+                                                        className="inline-block mt-1 px-2 py-1 text-xs bg-[#4A9782]/10 text-[#4A9782] rounded-full font-medium capitalize">
                                                         {userInfo.role}
                                                     </span>
                                                 )}
@@ -347,26 +456,26 @@ export function NavBar() {
                                             {/* Profile Actions */}
                                             <div className="py-1">
                                                 <motion.button
-                                                    whileHover={{ backgroundColor: "rgba(74, 151, 130, 0.1)" }}
+                                                    whileHover={{backgroundColor: "rgba(74, 151, 130, 0.1)"}}
                                                     onClick={() => {
                                                         navigate('/profile');
                                                         setIsProfileDropdownOpen(false);
                                                     }}
                                                     className="w-full text-left px-4 py-2 text-sm text-[#004030] dark:text-white hover:text-[#4A9782] transition-colors duration-200 flex items-center space-x-2"
                                                 >
-                                                    <User size={16} />
+                                                    <User size={16}/>
                                                     <span>View Profile</span>
                                                 </motion.button>
 
                                                 <motion.button
-                                                    whileHover={{ backgroundColor: "rgba(74, 151, 130, 0.1)" }}
+                                                    whileHover={{backgroundColor: "rgba(74, 151, 130, 0.1)"}}
                                                     onClick={() => {
                                                         navigate('/settings');
                                                         setIsProfileDropdownOpen(false);
                                                     }}
                                                     className="w-full text-left px-4 py-2 text-sm text-[#004030] dark:text-white hover:text-[#4A9782] transition-colors duration-200 flex items-center space-x-2"
                                                 >
-                                                    <Settings size={16} />
+                                                    <Settings size={16}/>
                                                     <span>Settings</span>
                                                 </motion.button>
                                             </div>
@@ -374,19 +483,19 @@ export function NavBar() {
                                             {/* Logout */}
                                             <div className="border-t border-[#4A9782]/20 py-1">
                                                 <motion.button
-                                                    whileHover={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+                                                    whileHover={{backgroundColor: "rgba(239, 68, 68, 0.1)"}}
                                                     onClick={handleLogout}
                                                     disabled={isLoggingOut}
                                                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:text-red-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
                                                 >
                                                     {isLoggingOut ? (
                                                         <motion.div
-                                                            animate={{ rotate: 360 }}
-                                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                            animate={{rotate: 360}}
+                                                            transition={{duration: 1, repeat: Infinity, ease: "linear"}}
                                                             className="w-4 h-4 border-2 border-red-600/20 border-t-red-600 rounded-full"
                                                         />
                                                     ) : (
-                                                        <LogOut size={16} />
+                                                        <LogOut size={16}/>
                                                     )}
                                                     <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
                                                 </motion.button>
@@ -397,24 +506,24 @@ export function NavBar() {
                             </div>
                         ) : (
                             <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{scale: 1.05}}
+                                whileTap={{scale: 0.95}}
                                 onClick={() => navigate('/login')}
                                 className="bg-gradient-to-r from-[#4A9782] to-[#004030] text-white px-6 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
                             >
-                                <User size={16} />
+                                <User size={16}/>
                                 <span>Sign In</span>
                             </motion.button>
                         )}
 
                         {/* Mobile Menu Button */}
                         <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            whileHover={{scale: 1.1}}
+                            whileTap={{scale: 0.9}}
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className="lg:hidden p-2 text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782] transition-colors duration-200 rounded-lg hover:bg-[#4A9782]/10"
                         >
-                            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                            {isMenuOpen ? <X size={24}/> : <Menu size={24}/>}
                         </motion.button>
                     </div>
                 </div>
@@ -423,10 +532,10 @@ export function NavBar() {
                 <AnimatePresence>
                     {isSearchOpen && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
+                            initial={{height: 0, opacity: 0}}
+                            animate={{height: "auto", opacity: 1}}
+                            exit={{height: 0, opacity: 0}}
+                            transition={{duration: 0.3}}
                             className="md:hidden border-t border-[#4A9782]/20 py-4 overflow-hidden"
                         >
                             <form onSubmit={handleSearch} className="relative">
@@ -441,7 +550,7 @@ export function NavBar() {
                                     type="submit"
                                     className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#4A9782]"
                                 >
-                                    <Search size={18} />
+                                    <Search size={18}/>
                                 </button>
                             </form>
                         </motion.div>
@@ -452,10 +561,10 @@ export function NavBar() {
                 <AnimatePresence>
                     {isMenuOpen && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
+                            initial={{height: 0, opacity: 0}}
+                            animate={{height: "auto", opacity: 1}}
+                            exit={{height: 0, opacity: 0}}
+                            transition={{duration: 0.3}}
                             className="lg:hidden border-t border-[#4A9782]/20 bg-white/95 dark:bg-[#004030]/95 backdrop-blur-sm overflow-hidden"
                         >
                             <div className="py-4 space-y-1">
@@ -464,10 +573,10 @@ export function NavBar() {
                                     return (
                                         <motion.button
                                             key={item.label}
-                                            initial={{ x: -20, opacity: 0 }}
-                                            animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: index * 0.1 }}
-                                            whileHover={{ x: 10, backgroundColor: "rgba(74, 151, 130, 0.1)" }}
+                                            initial={{x: -20, opacity: 0}}
+                                            animate={{x: 0, opacity: 1}}
+                                            transition={{delay: index * 0.1}}
+                                            whileHover={{x: 10, backgroundColor: "rgba(74, 151, 130, 0.1)"}}
                                             onClick={() => {
                                                 navigate(item.href);
                                                 setIsMenuOpen(false);
@@ -478,7 +587,7 @@ export function NavBar() {
                                                     : 'text-[#004030] dark:text-white hover:text-[#4A9782] dark:hover:text-[#4A9782]'
                                             }`}
                                         >
-                                            <IconComponent size={20} />
+                                            <IconComponent size={20}/>
                                             <span className="font-medium">{item.label}</span>
                                         </motion.button>
                                     );
