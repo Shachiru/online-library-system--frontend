@@ -298,8 +298,8 @@ export function NavBar() {
                         onClick={() => navigate('/')}
                     >
                         <motion.div
-                            whileHover={{rotate: 360}}
-                            transition={{duration: 0.6}}
+                            whileHover={{opacity: [1, 0.8, 1], scale: 1.05}}
+                            transition={{duration: 0.4}}
                             className="w-10 h-10 bg-gradient-to-br from-[#4A9782] to-[#004030] rounded-xl mr-3 flex items-center justify-center shadow-md"
                         >
                             <BookOpen className="w-6 h-6 text-white"/>
