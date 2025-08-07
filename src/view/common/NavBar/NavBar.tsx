@@ -481,12 +481,16 @@ export function NavBar() {
                                             </div>
 
                                             {/* Logout */}
-                                            <div className="border-t border-[#4A9782]/20 py-1">
+                                            <div className="border-t border-[#4A9782]/20 py-2 px-2 mt-1">
                                                 <motion.button
-                                                    whileHover={{backgroundColor: "rgba(239, 68, 68, 0.1)"}}
+                                                    whileHover={{
+                                                        backgroundColor: "rgba(239, 68, 68, 0.2)",
+                                                        scale: 1.02
+                                                    }}
+                                                    whileTap={{ scale: 0.98 }}
                                                     onClick={handleLogout}
                                                     disabled={isLoggingOut}
-                                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:text-red-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+                                                    className="w-full rounded-lg text-left px-4 py-2.5 text-sm font-medium bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 border border-red-200 dark:border-red-800/30 shadow-sm"
                                                 >
                                                     {isLoggingOut ? (
                                                         <motion.div
@@ -495,9 +499,9 @@ export function NavBar() {
                                                             className="w-4 h-4 border-2 border-red-600/20 border-t-red-600 rounded-full"
                                                         />
                                                     ) : (
-                                                        <LogOut size={16}/>
+                                                        <LogOut size={18} className="text-red-500 dark:text-red-400"/>
                                                     )}
-                                                    <span>{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
+                                                    <span className="font-medium">{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
                                                 </motion.button>
                                             </div>
                                         </motion.div>
