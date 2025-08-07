@@ -13,7 +13,6 @@ import {
     Sun,
     Menu,
     X,
-    BookmarkPlus,
     Library
 } from "lucide-react";
 import {backendApi} from "../../../api";
@@ -265,12 +264,7 @@ export function NavBar() {
 
     // Admin navigation items
     const adminNavItems: NavItemProps[] = userInfo.role === 'admin' ? [
-        {
-            label: "Add Book",
-            href: "/admin/books/add",
-            icon: BookmarkPlus,
-            isActive: location.pathname === "/admin/books/add"
-        },
+
         {
             label: "Admin Panel",
             href: "/admin",
