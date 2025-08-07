@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { increaseQuantity, decreaseQuantity } from "../../../slices/cartSlice";
-import type { AppDispatch, RootState } from "../../../store/store";
+import type { RootState } from "../../../store/store";
 import type { BookCardProps } from "../../../model/ComponentProps";
 
 export function BookCard({
@@ -12,34 +11,22 @@ export function BookCard({
                              showActions = true,
                              compact = false
                          }: BookCardProps) {
-    const dispatch = useDispatch<AppDispatch>();
     const [isHovered, setIsHovered] = useState(false);
 
-    const item = useSelector((state: RootState) =>
-        state.cart.items.find(cartItem => cartItem.book._id === data._id)
+    // Check if the book is already in the cart
+    const isInCart = useSelector((state: RootState) =>
+        state.cart.items.some(cartItem => cartItem.book._id === data._id)
     );
 
-    const addToCart = () => {
+    const handleAddToCart = () => {
         if (onAddToCart) {
             onAddToCart();
-        } else {
-            dispatch(increaseQuantity(data._id));
         }
     };
 
-    const handleIncrease = () => {
-        dispatch(increaseQuantity(data._id));
-    };
-
-    const handleDecrease = () => {
-        if (item && item.itemCount <= 1) {
-            if (onRemoveFromCart) {
-                onRemoveFromCart(data.isbn);
-            } else {
-                dispatch(decreaseQuantity(data._id));
-            }
-        } else {
-            dispatch(decreaseQuantity(data._id));
+    const handleRemoveFromCart = () => {
+        if (onRemoveFromCart) {
+            onRemoveFromCart(data.isbn);
         }
     };
 
@@ -81,19 +68,6 @@ export function BookCard({
             opacity: 1,
             transition: { duration: 0.3 }
         }
-    };
-
-    const buttonVariants: Variants = {
-        initial: { scale: 1 },
-        hover: {
-            scale: 1.05,
-            transition: {
-                type: "spring" as const,
-                stiffness: 400,
-                damping: 25
-            }
-        },
-        tap: { scale: 0.95 }
     };
 
     const cardClasses = compact
@@ -154,6 +128,21 @@ export function BookCard({
                         >
                             <span className="bg-white/95 backdrop-blur-sm text-[#004030] px-3 py-1 rounded-full text-xs font-semibold border border-[#4A9782]/30 shadow-sm">
                                 {data.genre}
+                            </span>
+                        </motion.div>
+
+                        {/* Availability Badge */}
+                        <motion.div
+                            className="absolute top-2 left-2"
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                data.availability
+                                    ? 'bg-green-100 text-green-800 border border-green-300'
+                                    : 'bg-red-100 text-red-800 border border-red-300'
+                            }`}>
+                                {data.availability ? 'Available' : 'Unavailable'}
                             </span>
                         </motion.div>
                     </div>
@@ -220,62 +209,55 @@ export function BookCard({
                                 {data.averageRating.toFixed(1)}
                             </span>
                             <span className="text-xs text-[#004030]/60">
-                                ({Math.floor(Math.random() * 100) + 10} reviews)
+                                ({data.reviews?.length || '0'} reviews)
                             </span>
                         </div>
                     </div>
 
                     {/* Action Buttons */}
-                    {showActions && (
+                    {showActions && data.availability && (
                         <AnimatePresence mode="wait">
-                            {item ? (
-                                <motion.div
-                                    key="quantity-controls"
+                            {isInCart ? (
+                                <motion.button
+                                    key="remove-from-cart"
+                                    onClick={handleRemoveFromCart}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -20 }}
+                                    whileHover={{
+                                        scale: 1.05,
+                                        backgroundColor: "#f87171",
+                                        transition: {
+                                            type: "spring",
+                                            stiffness: 400,
+                                            damping: 25
+                                        }
+                                    }}
+                                    whileTap={{ scale: 0.95 }}
                                     transition={{ duration: 0.3 }}
-                                    className="bg-gradient-to-r from-[#4A9782]/10 to-[#004030]/10 p-4 rounded-xl border border-[#4A9782]/20"
+                                    className="w-full bg-red-400 text-white font-semibold py-4 px-6 rounded-xl hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-400/50 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg"
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <motion.button
-                                            onClick={handleDecrease}
-                                            disabled={item.itemCount <= 1}
-                                            variants={buttonVariants}
-                                            whileHover="hover"
-                                            whileTap="tap"
-                                            className="w-10 h-10 bg-gradient-to-r from-[#4A9782]/20 to-[#004030]/20 text-[#004030] rounded-full hover:from-[#4A9782] hover:to-[#004030] hover:text-white transition-all duration-300 flex items-center justify-center border border-[#4A9782]/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4"/>
-                                            </svg>
-                                        </motion.button>
-
-                                        <motion.div
-                                            className="bg-white px-4 py-2 rounded-xl border-2 border-[#4A9782]/30 shadow-sm"
-                                            whileHover={{ scale: 1.05 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <span className="font-bold text-[#004030] text-lg">{item.itemCount}</span>
-                                        </motion.div>
-
-                                        <motion.button
-                                            onClick={handleIncrease}
-                                            variants={buttonVariants}
-                                            whileHover="hover"
-                                            whileTap="tap"
-                                            className="w-10 h-10 bg-gradient-to-r from-[#004030] to-[#4A9782] text-white rounded-full hover:from-[#4A9782] hover:to-[#004030] transition-all duration-300 flex items-center justify-center shadow-md"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                            </svg>
-                                        </motion.button>
-                                    </div>
-                                </motion.div>
+                                    <motion.svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        whileHover={{ rotate: 15, scale: 1.1 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </motion.svg>
+                                    <motion.span
+                                        whileHover={{ x: 2 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Remove from List
+                                    </motion.span>
+                                </motion.button>
                             ) : (
                                 <motion.button
                                     key="add-to-cart"
-                                    onClick={addToCart}
+                                    onClick={handleAddToCart}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -20 }}
@@ -290,6 +272,7 @@ export function BookCard({
                                     whileTap={{ scale: 0.95 }}
                                     transition={{ duration: 0.3 }}
                                     className="w-full bg-gradient-to-r from-[#004030] to-[#4A9782] text-white font-semibold py-4 px-6 rounded-xl hover:from-[#4A9782] hover:to-[#004030] focus:outline-none focus:ring-2 focus:ring-[#4A9782]/50 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg group border border-[#4A9782]/20"
+                                    disabled={!data.availability}
                                 >
                                     <motion.svg
                                         className="w-5 h-5"
@@ -299,7 +282,7 @@ export function BookCard({
                                         whileHover={{ rotate: 15, scale: 1.1 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5H17M7 13v8a2 2 0 002 2h6a2 2 0 002-2v-8"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </motion.svg>
                                     <motion.span
                                         whileHover={{ x: 2 }}
@@ -310,6 +293,13 @@ export function BookCard({
                                 </motion.button>
                             )}
                         </AnimatePresence>
+                    )}
+
+                    {/* Show unavailable message if book is not available */}
+                    {showActions && !data.availability && (
+                        <div className="mt-4 p-3 bg-gray-100 text-gray-600 rounded-lg text-center text-sm">
+                            This book is currently unavailable
+                        </div>
                     )}
                 </div>
 
